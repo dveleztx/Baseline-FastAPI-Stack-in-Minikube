@@ -1,0 +1,15 @@
+aioredis
+asyncpg
+email-validator
+fastapi
+fastapi-cache2[redis]
+gunicorn
+nest-asyncio
+passlib
+pydantic
+pyjwt
+pytest
+python-multipart
+requests
+sqlalchemy
+uvicorn

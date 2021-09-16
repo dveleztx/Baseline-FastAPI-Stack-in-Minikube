@@ -1,0 +1,36 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: example-postgres
+  labels:
+    name: database
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      service: example-postgres
+  template:
+    metadata:
+      labels:
+        service: example-postgres
+    spec:
+      serviceAccountName: registry
+      containers:
+        - name: example-db
+          image: docker.pkg.github.com/dveleztx/baseline-fastapi-stack-in-minikube/example-api:db
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-creds
+                  key: user
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-creds
+                  key: password
+

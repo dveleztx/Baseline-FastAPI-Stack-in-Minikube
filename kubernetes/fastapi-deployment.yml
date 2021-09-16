@@ -1,0 +1,32 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: example-api
+  labels:
+    name: backend
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: example-api
+  template:
+    metadata:
+      labels:
+        app: example-api
+    spec:
+      serviceAccountName: registry
+      containers:
+        - name: example-app
+          image: docker.pkg.github.com/dveleztx/baseline-fastapi-stack-in-minikube/example-api:app
+          imagePullPolicy: Always
+          env:
+            - name: ENVIRONMENT
+              value: "test"
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-uris
+                  key: db-connstr
+      restartPolicy: Always
+

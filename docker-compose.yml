@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+    example-api:
+        build: ./project
+        volumes:
+            - ./project:/usr/src/app
+        ports:
+            - 5000:5000
+        environment:
+            - ENVIRONMENT=test
+            - TESTING=1
+            - DATABASE_URL=postgresql+asyncpg://postgres:postgres@example-postgres:5432/users_db
+        depends_on:
+            - example-postgres
+
+    example-postgres:
+        build:
+            context: ./project/example_com/data
+            dockerfile: Dockerfile
+        expose:
+            - 5432
+        environment:
+            - POSTGRES_USER=postgres
+            - POSTGRES_PASSWORD=postgres
