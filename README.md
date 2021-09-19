@@ -23,6 +23,31 @@
 * [tests/test_accounts.py](./project/tests/test_accounts.py) - Tests our Accounts API module by sending requests to each endpoint. Tests for failures and successes
 
 
+## Pre-setup Notes
+
+**User setup is required!**
+
+1. Before proceeding with deploying this template API, you must create a `settings.json` file. The [settings_template.json](./project/example_com/settings_template.json) is the template you want to use. If this step is not complete, the app *will NOT work*. This file sets up the JWT secret when encoding tokens.
+
+2. I strongly recommend building your own Docker containers, so that you can pull from your own private registry. It's also good practice.
+
+**Build and push your app container**
+
+```bash
+docker build -f ./project/Dockerfile -t docker.pkg.github.com/{account}/{repo}/example-api:app ./project
+docker push docker.pkg.github.com/{account}/{repo}/example-api:app
+```
+
+**Build and push your database container**
+
+```bash
+docker build -f ./project/example_com/data/Dockerfile -t docker.pkg.github.com/{account}/{repo}/example-api:db ./project/example_com/data
+docker push docker.pkg.github.com/{account}/{repo}/example-api:db
+```
+
+When deploying to Kubernetes, the deployment scripts will need to point to your registry in the instructions below.
+
+
 ## Using Docker
 
 Docker is the recommended method to run this application. To run it, install [docker](https://docs.docker.com/get-docker/) and [docker-compose](https://docs.docker.com/compose/install/)
@@ -108,7 +133,9 @@ minikube dashboard
 
 **NOTE**: When launching the dashboard, it will run in the foreground. To break out of the dashboard, hit CTRL+c.
 
-2. Create your `secrets.yml` file in the [kubernetes](./kubernetes) directory. There is a template that you can copy to get the right formatting. Each field that has a "secret", needs to be hashed against the base64 encoder. When hashed, it just needs to be entered in the appropriate field. Example below.
+You can also run it in the background: `minikube dashboard &`
+
+2. Create your `secrets.yml` file in the [kubernetes](./kubernetes) directory. There is a template that you can copy to get the right formatting: `secrets-template.yml`. Each field that has a "secret", needs to be hashed against the base64 encoder. When hashed, it just needs to be entered in the appropriate field. Example below.
 
 ```
 echo -n "username" | base64
@@ -117,15 +144,17 @@ echo -n "password" | base64
 
 **NOTE**: Do not forget the `-n` argument for echo to remove newline characters. Failure to do so will cause frustrations.
 
-For the dockerconfigjson, you will need to hash the following, with the appropriate hash provided by GitLab. [Instructions](https://lionelmace.github.io/iks-lab/gitlab-registry.html) on to deploy a token for access to your GitLab.
+For the dockerconfigjson, you will need to hash the following, with the appropriate hash provided by GitHub. [Instructions](https://lionelmace.github.io/iks-lab/gitlab-registry.html) on to deploy a token for access to your GitHub. 
+
+**NOTE**: The instructions above are for GitLab, but work the same as GitHub. The only thing you need to change is the registry location which is docker.pkg.github.com.
 
 ```
 {
-	"auths": {
-		"registry.gitlab.com": {
-			"auth": "hashprovidedbygitlab"
-		}
-	}
+    "auths": {
+        "docker.pkg.github.com": {
+            "auth": "hashprovidedbygithub"
+        }
+    }
 }
 ```
 
@@ -136,13 +165,15 @@ What you can do is copy the above into a file `.dockerconfigjson` in the Kuberne
 cat .dockerconfigjson | base64
 ```
 
+This encode string can then be pasted into the dockerconfigjson in your `secrets.yml`.
+
 **NOTE**: Kubernetes automatically decodes your hashes and reads them. You should NEVER push your secrets YAML into your code base, nor your .dockerconfigjson. Anyone who has access to the dashboard will be able to read all of this plaintext however. Which is where Hashicorp Vault could assist in secure exchanging of secrets.
 
 
 3. Push the Secrets object to your Kubernetes Cluster.
 
 ```bash
-kubectl create -f ./kubernetes/secret.yml
+kubectl create -f ./kubernetes/secrets.yml
 ```
 
 4. Push the ServiceAccount, Services, Deployments objects into your Kubernetes Cluster.
@@ -155,7 +186,7 @@ kubectl create -f ./kubernetes/fastapi-service.yml
 kubectl create -f ./kubernetes/fastapi-deployment.yml
 ```
 
-5. Push the Ingress object into your Kubernetes Cluster to access it.
+5. Push the Ingress object into your Kubernetes Cluster to access it, without this step, your cluster is not accessible from the outside (including your host machine).
 
 ```bash
 minikube addons enable ingress
@@ -163,20 +194,18 @@ kubectl delete -A ValidatingWebhookConfiguration ingress-nginx-admission
 kubectl create -f ./kubernetes/minikube-ingress.yml
 ```
 
-6. Update */etc/hosts* file
+6. Update */etc/hosts* file to create a quick DNS entry.
 
 ```bash
 echo "$(minikube ip) example.api" | sudo tee -a /etc/hosts
 ```
 
-**NOTE**: This will create a DNS entry for example.com that you can visit without having to enter the IP address.
-
-7. Explore to the API
+7. Now, explore to the API!
 
 Go to http://example.api/docs
 
 
-8. Stop and Delete Minikube when you are complete!
+8. Once done, stop and delete Minikube!
 
 ```bash
 minikube stop; minikube delete
