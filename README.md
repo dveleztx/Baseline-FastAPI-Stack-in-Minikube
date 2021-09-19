@@ -23,6 +23,24 @@
 * [tests/test_accounts.py](./project/tests/test_accounts.py) - Tests our Accounts API module by sending requests to each endpoint. Tests for failures and successes
 
 
+## Description
+
+This repo is a template/baseline backend application that has two primary components: an api and database. This stack uses FastAPI and SQLAlchemy. There are also libraries for caching using redis, but this solution is still a work in progress.
+
+The entire application, from making a request to an endpoint, to querying the database, are all asynchronous.
+
+### About the API
+
+With the API, you have three categories in the API, users, team projects, and admin.
+
+You are able to create new users, get user information, update user information, and delete user accounts. Registration and Login are the only two endpoints that are not secured, meaning the other API endpoints require a JWT token in order to perform CRUD operations. With the team projects, you are able to create/read/update/delete projects.
+
+### Caveats
+
+- You are not able to add members to a project, yet. Feel free to fix this issue yourself for practice
+- Redis/FastAPI caching are not working right now, this is a reported [issue in the library used](https://github.com/long2ice/fastapi-cache/issues/26)
+
+
 ## Pre-setup Notes
 
 **User setup is required!**
@@ -48,7 +66,7 @@ docker push docker.pkg.github.com/{account}/{repo}/example-api:db
 When deploying to Kubernetes, the deployment scripts will need to point to your registry in the instructions below.
 
 
-## Using Docker
+## Deployment via Docker
 
 Docker is the recommended method to run this application. To run it, install [docker](https://docs.docker.com/get-docker/) and [docker-compose](https://docs.docker.com/compose/install/)
 
@@ -110,7 +128,7 @@ Access PostgreSQL Database:
 docker-compose exec example-postgres psql -U postgres
 ```
 
-## Using Kubernetes
+## Deployment via Kubernetes
 
 To run this stack on Kubernetes, you'll need a couple of things. The benefits are container orchestration, granular control over them. Orchestration helps with cross-server communication, horizontal scaling, service discovery, load balancing, security/TLS, **zero-downtime deployments**, rollbacks, logging, and monitoring.
 
